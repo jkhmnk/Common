@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<script type="text/javascript" src="/../../../../D:/js/jquery-1.11.1.min.js"></script>
+	<title>瀑布流</title>
+
+<script type="text/javascript">
+$(function () {
+
+	var oContainer = $('#container'), //容器
+		oLoader = $('#loader'); //加载图片
+	var iWidth = 200, //列宽
+		iSpace = 10,  //间距
+		iOuterWidth = iWidth + iSpace; //一列的实际宽度
+	var iCells = 0; //总列
+	var sUrl = 'http://www.wookmark.com/api/json/popular?callback=?';
+	var iPage = 0;
+	var arrL = [],
+		arrT = [];
+	var iBtn = true;
+
+	function setCells() { //根据其列宽，算出其窗口的总宽度
+		iCells = Math.floor($(window).innerWidth() / iOuterWidth); //计算其容器里的列数
+		
+		if (iCells < 3) {
+			iCells = 3;
+		}
+		if (iCells > 6) {
+			iCells = 6;
+		}
+
+		oContainer.css('width',iOuterWidth * iCells -iSpace); //计算其容器宽度，并去掉一个间距，即最后一列的间距
+	}
+	setCells();
+
+	for (var i=0;i<iCells;i++) {//添加进初始top left值
+		arrT.push(0);
+		arrL.push(i * iOuterWidth);
+	}
+
+	function getData() {
+		if (iBtn) {
+			iBtn = false;
+			oLoader.show();
+			$.getJSON(sUrl,'page='+iPage,function (data) {
+				//console.log(data)
+				$.each(data,function (index,obj) {
+					var oImg = $('<img />');
+					oImg.attr('src',obj.preview)
+					oContainer.append(oImg);
+					
+					//计算其缩放后的图片高度 先计算其百分比，再乘以图片高度
+					var iHeight = iWidth / obj.width * obj.height;
+					oImg.css({
+						width : iWidth,
+						height : iHeight
+					})
+
+					//获取arrT最小值所在的位置
+					var iMinIndex = getMin();
+
+					//设置位置
+					oImg.css({
+						'left':arrL[iMinIndex],
+						'top':arrT[iMinIndex]
+					});
+
+					arrT[iMinIndex] += iHeight + 10;
+
+					oLoader.hide();
+					iBtn = true;
+				})
+			})
+		}
+	}
+
+	getData();
+	$(window).on('scroll',function () {
+		var iH = $(window).scrollTop() + $(window).innerHeight(); //算出可视区，即从页面顶部到当前屏的高度
+		//获取arrT最小值所在的位置
+		var iMinIndex = getMin();
+
+		if (arrT[iMinIndex] + oContainer.offset().top <iH) {
+			iPage++;
+			getData();
+		}
+
+	})
+
+	$(window).on('resize',function () {
+
+		var iOldcells = iCells;
+
+		setCells();
+
+		var iH = $(window).scrollTop() + $(window).innerHeight(); //算出可视区，即从页面顶部到当前屏的高度
+		//获取arrT最小值所在的位置
+		var iMinIndex = getMin();
+
+		if (arrT[iMinIndex] + oContainer.offset().top <iH) {
+			iPage++;
+			getData();
+		}		
+
+		if (iOldcells == iCells) {
+			return;
+		}
+
+		arrT = [];
+		arrL = [];
+
+		for (var i=0;i<iCells;i++) {//添加进初始top left值
+			arrT.push(0);
+			arrL.push(i * iOuterWidth);
+		}
+
+		var aImgs = oContainer.find('img');
+
+		aImgs.each(function () {
+			//获取arrT最小值所在的位置
+			var iMinIndex = getMin();
+		
+			//设置位置
+			/*$(this).css({
+				'left':arrL[iMinIndex],
+				'top':arrT[iMinIndex]
+			});*/
+			$(this).animate({
+				'left':arrL[iMinIndex],
+				'top':arrT[iMinIndex]
+			});
+
+			arrT[iMinIndex] += $(this).height() + 10;	
+		});	
+
+	})
+
+	function getMin() {//获取arrT最小值所在的位置
+		var iv =arrT[0]; //默认是从数组的第一个开始，只有下面循环里的判断成立时才会更改。
+		var _index = 0;
+
+		for (var i=1;i<arrT.length;i++) {
+			if (arrT[i] < iv) {
+				iv = arrT[i]; //前一个比后面的大，则成功就改变此值，不成立保存的则还是上一次成立时保存的值
+				_index = i; //此值同上一个变量一样。
+			}
+		}
+
+		return _index; //返回的是条件成立时改变的值，如果不成立则保存的是上一次条件成立返回的数值。默认是第一次是0
+	}
+
+})
+
+</script>
+
+</head>
+<body>
+	
+<style type="text/css">
+*{margin:0;padding:0;}
+#container{border:1px solid red;margin:50px auto 0;position:relative;}
+#container img{position:absolute;}
+#loader{width:100%;height:435px;background:url(img/loading40.gif) no-repeat center #fff;position:fixed;bottom:0;left:0;display:none;}
+</style>
+
+<div id="container"></div>
+<div id="loader"></div>
+
+</body>
+</html>
