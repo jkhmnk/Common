@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<script type="text/javascript" src="js/sea.js"></script>
+
+	<script type="text/javascript">
+
+	seajs.use('./js/test.js')
+
+	</script>
+	<style type="text/css">
+		#box{width:100px;height:100px;background:#000;cursor:pointer;position:absolute;}
+		#ooo{width:200px;height:200px;background:red;display:none;position:relative;}
+		#ccc{width:50px;height:50px;background:black;vertical-align:bottom;position:absolute;right:0;bottom:0;}
+	</style>
+</head>
+<body>
+	
+	<input type="button" id="oInput" value="按钮">
+	<div id="ooo"><div id="ccc"></div></div>
+
+	<div id="box"></div>
+	
+
+</body>
+</html>
